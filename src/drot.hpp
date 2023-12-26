@@ -174,8 +174,18 @@ template<typename T> void step(T *X,
     if (iteration % 2 == 0) {
         update_x_even_<float> <<<grid_x, block_x>>>(X, a2, b2, gamma2, normsq,
                 phi1, phi2, C, stepsize, nrows, ncols);
+        cudaError_t cudaError1 = cudaGetLastError();
+        if (cudaError1 != cudaSuccess) {
+            printf("Kernel launch error1: %s\n", cudaGetErrorString(cudaError1));
+            // Additional error handling if needed
+        }
         update_auxs_even<float> <<<grid_auxs, block_auxs>>>(a1, b1, a2, b2, gamma1, gamma2,
             normsq, phi1, phi2, p, q,  nrows, ncols);
+        cudaError_t cudaError2 = cudaGetLastError();
+        if (cudaError2 != cudaSuccess) {
+            printf("Kernel launch error2: %s\n", cudaGetErrorString(cudaError2));
+            // Additional error handling if needed
+        }
     } else {
         update_x_odd_<float> <<<grid_x, block_x>>>(X, a2, b2, gamma2, normsq,
                 phi1, phi2, C, stepsize, nrows, ncols);
