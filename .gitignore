@@ -1,6 +1,10 @@
 bin
 examples/output
 examples/data
+CMakeFiles
+*.so
+*.cmake
+CMakeCache.txt
 .ipynb_checkpoints/
 *.pdf
 *.jpg

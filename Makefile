@@ -129,6 +129,30 @@ fast_ot/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fast_ot.dir/build.make CMakeFiles/fast_ot.dir/build
 .PHONY : fast_ot/fast
 
+fast_ot.o: fast_ot.cu.o
+.PHONY : fast_ot.o
+
+# target to build an object file
+fast_ot.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fast_ot.dir/build.make CMakeFiles/fast_ot.dir/fast_ot.cu.o
+.PHONY : fast_ot.cu.o
+
+fast_ot.i: fast_ot.cu.i
+.PHONY : fast_ot.i
+
+# target to preprocess a source file
+fast_ot.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fast_ot.dir/build.make CMakeFiles/fast_ot.dir/fast_ot.cu.i
+.PHONY : fast_ot.cu.i
+
+fast_ot.s: fast_ot.cu.s
+.PHONY : fast_ot.s
+
+# target to generate assembly for a file
+fast_ot.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/fast_ot.dir/build.make CMakeFiles/fast_ot.dir/fast_ot.cu.s
+.PHONY : fast_ot.cu.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -138,6 +162,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... fast_ot"
+	@echo "... fast_ot.o"
+	@echo "... fast_ot.i"
+	@echo "... fast_ot.s"
 .PHONY : help
 
 

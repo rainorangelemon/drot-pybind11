@@ -6,6 +6,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <tuple>
+#include <list>    
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+
+// PYBIND11_MAKE_OPAQUE(std::list<float>);
 
 #define BLOCK_SIZE 128
 #define WORK_SIZE 1
@@ -523,17 +528,61 @@ template<typename T> void step(T *X,
     if (iteration % 2 == 0) {
         update_x_even_<float> <<<grid_x, block_x>>>(X, a2, b2, gamma2, normsq,
                 phi1, phi2, C, stepsize, nrows, ncols);
+        // cudaError_t cudaError1 = cudaGetLastError();
+        // if (cudaError1 != cudaSuccess) {
+        //     printf("Kernel launch error1 for even: %s\n", cudaGetErrorString(cudaError1));
+        //     // Additional error handling if needed
+        // }                
         update_auxs_even<float> <<<grid_auxs, block_auxs>>>(a1, b1, a2, b2, gamma1, gamma2,
             normsq, phi1, phi2, p, q,  nrows, ncols);
+        // cudaError_t cudaError2 = cudaGetLastError();
+        // if (cudaError2 != cudaSuccess) {
+        //     printf("Kernel launch error2 for even: %s\n", cudaGetErrorString(cudaError2));
+        //     // Additional error handling if needed
+        // }            
     } else {
         update_x_odd_<float> <<<grid_x, block_x>>>(X, a2, b2, gamma2, normsq,
                 phi1, phi2, C, stepsize, nrows, ncols);
+        // cudaError_t cudaError1 = cudaGetLastError();
+        // if (cudaError1 != cudaSuccess) {
+        //     printf("Kernel launch error1 for odd: %s\n", cudaGetErrorString(cudaError1));
+        //     // Additional error handling if needed
+        // }                                
         update_auxs_odd<float> <<<grid_auxs, block_auxs>>>(a1, b1, a2, b2, gamma1, gamma2,
             normsq, phi1, phi2, p, q,  nrows, ncols);
+        // cudaError_t cudaError2 = cudaGetLastError();
+        // if (cudaError2 != cudaSuccess) {
+        //     printf("Kernel launch error2 for odd: %s\n", cudaGetErrorString(cudaError2));
+        //     // Additional error handling if needed
+        // }                       
     }
 }
 
-template<typename T> std::tuple<T, std::vector<T>, std::vector<T>> drot(py::array_t<T> C_input,
+
+template <typename T>
+struct Drot_Log {
+    Drot_Log(const T &fval, const std::list<T> &residuals, const std::list<T> &objectives)
+        : fval(fval), residuals(residuals), objectives(objectives) {}
+
+    void setFval(const T &fval_) { fval = fval_; }
+
+    const T &getFval() const { return fval; }
+
+    const std::list<T> &getResiduals() const { return residuals; }
+
+    void setResiduals(const std::list<T> &residuals_) { residuals = residuals_; }
+
+    const std::list<T> &getObjectives() const { return objectives; }
+
+    void setObjectives(const std::list<T> &objectives_) { objectives = objectives_; }
+
+    T fval;
+    std::list<T> residuals;
+    std::list<T> objectives;
+};
+
+
+template<typename T> Drot_Log<T> drot(py::array_t<T> C_input,
         py::array_t<T> p_input,
         py::array_t<T> q_input,
         const int nrows,
@@ -544,7 +593,7 @@ template<typename T> std::tuple<T, std::vector<T>, std::vector<T>> drot(py::arra
         const bool verbose=true,
         const bool log=false) {
 
-    py::buffer_info C_info = C_input.request(), 
+    py::buffer_info C_info = C_input.request();
     py::buffer_info p_info = p_input.request();
     py::buffer_info q_info = q_input.request();
 
@@ -619,7 +668,7 @@ template<typename T> std::tuple<T, std::vector<T>, std::vector<T>> drot(py::arra
         objectives.reserve(maxiters + 1);
     }
     if (verbose)
-        printf("%8s %10s %10s\n", "Iter", "Time", "Residual");
+        printf("%8s %10s %10s\n", "Iter", "Residual", "Objective");
     while ((!done) && (k < maxiters)) {
         step(dX, da1, db1, da2, db2, &dcommon[14], &dcommon[15], dphi1, dphi2,
                &dcommon[0], dC, dp, dq, stepsize, nrows, ncols, k);
@@ -636,7 +685,7 @@ template<typename T> std::tuple<T, std::vector<T>, std::vector<T>> drot(py::arra
             objectives.push_back(fval);
         }
         if (verbose)
-            printf("%8d %10.5f %10.5f \n", k, res);
+            printf("%8d %10.5f %10.5f\n", k, res, fval);
     }
 
     // Cleaning
@@ -652,10 +701,21 @@ template<typename T> std::tuple<T, std::vector<T>, std::vector<T>> drot(py::arra
     cudaFree(dphi2);
     cudaFree(dcommon);
 
-    return std::make_tuple(fval, residuals, objectives);
+
+    std::list<T> residuals_list(residuals.begin(), residuals.end());
+    std::list<T> objectives_list(objectives.begin(), objectives.end());
+
+    Drot_Log<T> result(fval, residuals_list, objectives_list);
+    return result;
 }
 
 PYBIND11_MODULE(fast_ot, m)
 {
-  m.def("drot", &drot<float>, "Douglas-Rachford Splitting for Optimal Transport");
+    py::class_<Drot_Log<float>>(m, "Drot_Log")
+        .def(py::init<const float&, const std::list<float>&, const std::list<float>&>())
+        .def_property("fval", &Drot_Log<float>::getFval, &Drot_Log<float>::setFval)
+        .def_property("residuals", &Drot_Log<float>::getResiduals, &Drot_Log<float>::setResiduals)
+        .def_property("objectives", &Drot_Log<float>::getObjectives, &Drot_Log<float>::setObjectives);    
+    m.def("drot", &drot<float>, "Douglas-Rachford Splitting for Optimal Transport");
+    // py::bind_vector<std::list<float>>(m, "VectorFloat", py::module_local(false));
 }
