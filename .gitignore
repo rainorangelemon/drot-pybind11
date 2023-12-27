@@ -5,6 +5,7 @@ CMakeFiles
 *.so
 *.cmake
 CMakeCache.txt
+Makefile
 .ipynb_checkpoints/
 *.pdf
 *.jpg
