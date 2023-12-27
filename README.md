@@ -43,7 +43,7 @@ Check the complete example in [example.ipynb](./example.ipynb)
 
 ## Comments
 
-The motivation of this repo: see whether this new method is a good replacement for `ot.emd2`. It turns out that it isn't (at least for this version). Even for small samples, `ot.emd2` is still faster than the current code. 
+The motivation of this repo: see whether this new method is a good replacement for `ot.emd2`. It turns out that it isn't (at least for this version). Even for small samples, `ot.emd2` is still faster (and more accurate, definitely) than the current code. 
 
 With `eps=1e-5` and `n=10000`, the current code would require 100 seconds to converge, while `ot.emd2` takes less than 10 seconds.
 
