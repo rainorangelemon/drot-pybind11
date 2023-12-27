@@ -1,4 +1,4 @@
-# DROT
+# DROT-PyBind11
 The PyBind11 version for Douglas-Rachford Splitting for Optimal Transport
 
 ## Installation
