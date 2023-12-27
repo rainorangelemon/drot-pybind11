@@ -28,10 +28,10 @@ samples0 = multivariate_normal.rvs(np.zeros((dim,)), np.eye(dim), size=n_sample)
 samples1 = multivariate_normal.rvs(np.ones((dim,)), np.eye(dim), size=n_sample).reshape(-1, dim)
 
 C = cdist(samples0, samples1)
-p = np.ones((C.shape[0],)) * 1 / C.shape[0]
-q = np.ones((C.shape[1],)) * 1 / C.shape[1]
 
 # run drot
+p = np.ones((C.shape[0],)) * 1 / C.shape[0]
+q = np.ones((C.shape[1],)) * 1 / C.shape[1]
 stepsize = 2. / sum(C.shape)
 maxiters = 100000
 eps = 1e-2
